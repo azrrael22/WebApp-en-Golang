@@ -28,33 +28,49 @@ func imageData(path string) string {
 	return base64.StdEncoding.EncodeToString(data)
 }
 
-// randomImagePath busca en el directorio dado una imagen (formatos: .png, .jpg, .jpeg) y retorna su ruta al azar.
-func randomImagePath(dir string) (string, error) {
+// randomImagePaths busca en el directorio dado todas las imágenes (formatos: .png, .jpg, .jpeg),
+// las mezcla de forma aleatoria y retorna un slice con 'count' rutas.
+func randomImagePaths(dir string, count int) ([]string, error) {
 	// Listar los archivos en el directorio.
 	files, err := os.ReadDir(dir)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	var images []string
-	// Filtrar sólo los archivos con extensiones válidas.
+	// Filtrar únicamente los archivos con extensiones válidas.
 	for _, file := range files {
 		if !file.IsDir() {
 			name := strings.ToLower(file.Name())
-			if strings.HasSuffix(name, ".png") || strings.HasSuffix(name, ".jpg") || strings.HasSuffix(name, ".jpeg") {
+			if strings.HasSuffix(name, ".png") ||
+				strings.HasSuffix(name, ".jpg") ||
+				strings.HasSuffix(name, ".jpeg") {
 				images = append(images, file.Name())
 			}
 		}
 	}
 
 	if len(images) == 0 {
-		return "", fmt.Errorf("no se encontraron imágenes en el directorio %s", dir)
+		return nil, fmt.Errorf("no se encontraron imágenes en el directorio %s", dir)
 	}
 
-	// Semilla para el generador aleatorio.
-	index := rand.Intn(len(images))
-	// Construir la ruta completa.
-	return filepath.Join(dir, images[index]), nil
+	// Mezclar aleatoriamente el slice.
+	rand.Shuffle(len(images), func(i, j int) {
+		images[i], images[j] = images[j], images[i]
+	})
+
+	// Si se solicita más imágenes de las disponibles, ajustar count.
+	if count > len(images) {
+		count = len(images)
+	}
+
+	// Construir la ruta completa para cada imagen seleccionada.
+	var paths []string
+	for _, filename := range images[:count] {
+		paths = append(paths, filepath.Join(dir, filename))
+	}
+
+	return paths, nil
 }
 
 // parseFlags se encarga de parsear los flags de línea de comandos y retorna el puerto sobre el que se ejecutará el servidor.
@@ -66,37 +82,50 @@ func parseFlags() string {
 	return puerto
 }
 
-// indexHandler maneja la ruta raíz ("/") y renderiza la plantilla index.html.
-// Se encarga de pasar a la plantilla el nombre del equipo (hostname) y la imagen codificada.
+// indexHandler ahora obtiene cuatro imágenes al azar y pasa la información a la plantilla.
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	// Se obtiene el nombre del equipo en el que se está ejecutando la aplicación.
+	// Se obtiene el nombre del equipo.
 	hostname, err := os.Hostname()
 	if err != nil {
-		hostname = "desconocido" // Valor por defecto si ocurre algún error al obtener el hostname.
+		hostname = "desconocido"
 	}
 
-	// Se obtiene una ruta de imagen aleatoria desde la carpeta "imagenes".
-	imgPath, err := randomImagePath("imagenes")
+	// Se obtienen 4 rutas de imagen aleatorias desde la carpeta "imagenes".
+	paths, err := randomImagePaths("imagenes", 4)
 	if err != nil {
 		log.Printf("Error: %v", err)
-		imgPath = "imagenes/imagen.png" // Ruta por defecto si ocurre un error.
+		// Opcional: definir ruta por defecto si ocurre un error.
+		paths = []string{"imagenes/imagen.png"}
 	}
 
-	// Detectar la extensión (sin el punto) para establecer el tipo MIME
-	ext := strings.TrimPrefix(strings.ToLower(filepath.Ext(imgPath)), ".")
+	// Definir una estructura para contener la información de cada imagen.
+	type ImageInfo struct {
+		Mime      string // Extensión sin el punto, para el tipo MIME.
+		ImageData string // Cadena codificada en base64.
+		ImageName string // Nombre del archivo.
+	}
 
-	// Se crea la estructura que contiene los datos que se pasarán a la plantilla.
+	var images []ImageInfo
+	for _, p := range paths {
+		// Detectar la extensión sin el punto.
+		ext := strings.TrimPrefix(strings.ToLower(filepath.Ext(p)), ".")
+		images = append(images, ImageInfo{
+			Mime:      ext,
+			ImageData: imageData(p),
+			ImageName: filepath.Base(p),
+		})
+	}
+
+	// Se crea la estructura que se pasará a la plantilla.
 	data := struct {
-		Host      string // Nombre del equipo.
-		Mime      string // Tipo MIME (png, jpg, jpeg).
-		ImageData string // Cadena de la imagen codificada en base64.
+		Host   string      // Nombre del equipo.
+		Images []ImageInfo // Slice con la información de las imágenes.
 	}{
-		Host:      hostname,
-		Mime:      ext,
-		ImageData: imageData(imgPath),
+		Host:   hostname,
+		Images: images,
 	}
 
-	// Se ejecuta la plantilla enviando los datos. En caso de error, se envía una respuesta HTTP de error.
+	// Se ejecuta la plantilla enviando los datos.
 	if err := tpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

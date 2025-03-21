@@ -1,25 +1,22 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Servidor de imágenes</title>
-    <!-- Se utiliza Bootstrap desde CDN para mayor flexibilidad -->
+    <!-- Bootstrap CSS vía jsDelivr -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body class="bg-white text-white">
     <div class="container py-4">
-        <!-- Encabezado con título y icono, alineados a la izquierda -->
+        <!-- Encabezado con título alineado a la izquierda -->
         <div class="row align-items-center mb-3">
             <div class="col">
                 <!-- Título con fondo negro, texto blanco y alineado a la izquierda -->
                 <h1 class="display-6 text-start bg-dark text-white p-3">Servidor de imágenes</h1>
-            </div>
-            <div class="col-auto">
-                <!-- Icono de la nube -->
-                <i class="fas fa-cloud fa-2x"></i>
             </div>
         </div>
         <!-- Sección para desplegar el nombre del host -->
@@ -28,16 +25,23 @@
                 <p class="h5 text-center text-dark">Hostname: {{.Host}}</p>
             </div>
         </div>
-        <!-- Sección para la imagen -->
+        <!-- Sección para mostrar las imágenes -->
         <div class="row">
-            <div class="col">
-                <!-- La imagen se muestra sin centrado forzado -->
-                <img src="data:image/{{.Mime}};base64,{{.ImageData}}" width="500" alt="Imagen sin centrar" class="d-block">
+            {{range .Images}}
+            <div class="col-md-3 mb-3">
+                <!-- Tarjeta con imagen y nombre -->
+                <div class="card">
+                    <img src="data:image/{{.Mime}};base64,{{.ImageData}}" class="card-img-top" alt="Imagen sin centrar">
+                    <div class="card-body bg-dark text-white">
+                        <p class="card-text text-center">{{.ImageName}}</p>
+                    </div>
+                </div>
             </div>
+            {{end}}
         </div>
     </div>
-    <!-- Se incluye Bootstrap JS desde CDN -->
+    <!-- Bootstrap JS vía jsDelivr -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/bootstrap.js"></script>
 </body>
+
 </html>
