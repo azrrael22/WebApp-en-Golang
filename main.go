@@ -2,12 +2,15 @@ package main
 
 import (
 	"encoding/base64" // Se utiliza para codificar la imagen en formato base64.
-	"flag"            // Paquete para parsear flags de la línea de comandos.
+	"flag"            // Para parsear flags de la línea de comandos.
 	"fmt"             // Para imprimir mensajes en la consola.
 	"html/template"   // Para renderizar las plantillas HTML.
 	"log"             // Para registrar mensajes de error.
+	"math/rand"       // Para seleccionar un elemento al azar.
 	"net/http"        // Para manejar solicitudes HTTP.
 	"os"              // Para trabajar con operaciones de archivos y obtener información del sistema.
+	"path/filepath"   // Para construir rutas de archivo de forma segura.
+	"strings"         // Para trabajar con cadenas.
 )
 
 // Se parsea y carga la plantilla HTML desde el archivo index.html.
@@ -23,6 +26,35 @@ func imageData(path string) string {
 	}
 	// Se codifica la imagen a base64 y se retorna la cadena.
 	return base64.StdEncoding.EncodeToString(data)
+}
+
+// randomImagePath busca en el directorio dado una imagen (formatos: .png, .jpg, .jpeg) y retorna su ruta al azar.
+func randomImagePath(dir string) (string, error) {
+	// Listar los archivos en el directorio.
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return "", err
+	}
+
+	var images []string
+	// Filtrar sólo los archivos con extensiones válidas.
+	for _, file := range files {
+		if !file.IsDir() {
+			name := strings.ToLower(file.Name())
+			if strings.HasSuffix(name, ".png") || strings.HasSuffix(name, ".jpg") || strings.HasSuffix(name, ".jpeg") {
+				images = append(images, file.Name())
+			}
+		}
+	}
+
+	if len(images) == 0 {
+		return "", fmt.Errorf("no se encontraron imágenes en el directorio %s", dir)
+	}
+
+	// Semilla para el generador aleatorio.
+	index := rand.Intn(len(images))
+	// Construir la ruta completa.
+	return filepath.Join(dir, images[index]), nil
 }
 
 // parseFlags se encarga de parsear los flags de línea de comandos y retorna el puerto sobre el que se ejecutará el servidor.
@@ -42,13 +74,26 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		hostname = "desconocido" // Valor por defecto si ocurre algún error al obtener el hostname.
 	}
+
+	// Se obtiene una ruta de imagen aleatoria desde la carpeta "imagenes".
+	imgPath, err := randomImagePath("imagenes")
+	if err != nil {
+		log.Printf("Error: %v", err)
+		imgPath = "imagenes/imagen.png" // Ruta por defecto si ocurre un error.
+	}
+
+	// Detectar la extensión (sin el punto) para establecer el tipo MIME
+	ext := strings.TrimPrefix(strings.ToLower(filepath.Ext(imgPath)), ".")
+
 	// Se crea la estructura que contiene los datos que se pasarán a la plantilla.
 	data := struct {
 		Host      string // Nombre del equipo.
+		Mime      string // Tipo MIME (png, jpg, jpeg).
 		ImageData string // Cadena de la imagen codificada en base64.
 	}{
 		Host:      hostname,
-		ImageData: imageData("imagenes/imagen.png"), // Asegúrate de tener la imagen en la ruta correcta.
+		Mime:      ext,
+		ImageData: imageData(imgPath),
 	}
 
 	// Se ejecuta la plantilla enviando los datos. En caso de error, se envía una respuesta HTTP de error.
