@@ -1,51 +1,94 @@
+<!--
+Archivo: index.html
+Descripción:
+    Este archivo HTML sirve como front-end para una aplicación de servidor de imágenes. Utiliza Bootstrap 5 para un diseño responsivo y CSS personalizado para estilos adicionales.
+
+Características principales:
+    - Renderizado dinámico de contenido utilizando plantillas de Go:
+            • Visualización del nombre del host: "{{.Host}}"
+            • Iteración sobre una colección de objetos de imagen ("{{range .Images}}") para crear tarjetas de imagen.
+    - Tarjetas de imagen:
+            • Cada tarjeta muestra una imagen codificada en base64 junto con su nombre.
+            • La fuente de la imagen se construye dinámicamente utilizando el tipo MIME y los datos de imagen en base64: "data:image/{{.Mime}};base64,{{.ImageData}}".
+            • El estilo personalizado en cada tarjeta asegura que las imágenes se ajusten a dimensiones específicas y estén centradas.
+    - Diseño:
+            • Un encabezado contiene el título de la aplicación.
+            • Un diseño de cuadrícula responsiva muestra las tarjetas de imagen.
+            • Un pie de página proporciona información del curso y de los estudiantes.
+    - Dependencias externas:
+            • Bootstrap CSS y JS se cargan vía CDN de jsDelivr.
+
+Uso:
+    - Este archivo está destinado a ser renderizado por un servidor web en Go que suministre los datos dinámicos (Host, Images) en tiempo de ejecución.
+-->
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
+    <!-- Definición de codificación de caracteres y configuración de compatibilidad y responsividad -->
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Título de la página -->
     <title>Servidor de imágenes</title>
-    <!-- Bootstrap CSS vía jsDelivr -->
+    
+    <!-- Importación de Bootstrap CSS desde el CDN de jsDelivr -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Estilos personalizados -->
     <style>
+        /* Estilos para la imagen que se muestra en la tarjeta */
         .card-img-top {
-            width: 100%;
-            height: auto;
-            max-width: 500px;
-            max-height: 300px;
-            margin: 0 auto; /* Para centrar la imagen en la columna */
-            border: 5px solid #212529; /* Borde negro de 5px */
-            object-fit: cover; /* Para que la imagen llene el contenedor */
+            width: 100%; /* La imagen ocupará el 100% del ancho de su contenedor */
+            height: 100%; /* La imagen ocupará el 100% de la altura del contenedor */
+            max-width: 500px; /* Ancho máximo de la imagen: 500px */
+            max-height: 375px; /* Altura máxima de la imagen: 375px */
+            margin: 0 auto; /* Centra la imagen horizontalmente dentro de la tarjeta */
+            border: 5px solid #212529; /* Borde negro de 5px alrededor de la imagen */
+            object-fit: cover; /* La imagen se recorta para llenar el contenedor sin distorsión */
         }
+        
+        /* Estilos para la tarjeta que contiene cada imagen */
         .card {
             background-color: #212529; /* Fondo negro para la tarjeta */
+            width: 500px; /* Ancho fijo de la tarjeta: 500px */
         }
     </style>
 </head>
 
 <body class="bg-white text-white">
+    <!-- Contenedor principal con padding vertical -->
     <div class="container py-4">
-        <!-- Encabezado con título alineado a la izquierda -->
+        
+        <!-- Sección del encabezado -->
         <div class="row align-items-center mb-3">
             <div class="col">
-                <!-- Título con fondo negro, texto blanco y alineado a la izquierda -->
+                <!-- Título principal de la página con fondo oscuro, texto blanco y padding -->
                 <h1 class="display-6 text-start bg-dark text-white p-3">Servidor de imágenes</h1>
             </div>
         </div>
+        
         <!-- Sección para desplegar el nombre del host -->
         <div class="row mb-3">
             <div class="col">
+                <!-- Muestra el hostname obtenido dinámicamente del servidor utilizando la plantilla de Go -->
                 <p class="h5 text-center text-dark">Hostname: {{.Host}}</p>
             </div>
         </div>
+        
         <!-- Sección para mostrar las imágenes -->
         <div class="row">
+            <!-- Iteración sobre cada imagen en la colección proporcionada por el servidor -->
             {{range .Images}}
-            <div class="col-md-6 col-lg-6 mb-3">
-                <!-- Tarjeta con imagen y nombre -->
+            <!-- Cada imagen se muestra en una columna que ocupa 12 columnas en dispositivos pequeños
+                 y 6 columnas en dispositivos medianos y grandes; además, se centra la tarjeta con flexbox -->
+            <div class="col-12 col-md-6 col-lg-6 mb-3 d-flex justify-content-center">
+                <!-- Tarjeta que contiene la imagen y su nombre -->
                 <div class="card">
+                    <!-- La imagen se muestra utilizando datos en base64 y se aplica la clase "card-img-top" para los estilos -->
                     <img src="data:image/{{.Mime}};base64,{{.ImageData}}" class="card-img-top" alt="Imagen sin centrar">
+                    <!-- Cuerpo de la tarjeta con fondo oscuro y texto blanco que muestra el nombre de la imagen -->
                     <div class="card-body bg-dark text-white">
                         <p class="card-text text-center">{{.ImageName}}</p>
                     </div>
@@ -54,25 +97,26 @@
             {{end}}
         </div>
 
-        <!-- Pie de página -->
+        <!-- Sección del pie de página -->
         <footer class="bg-dark text-white py-3">
             <div class="container">
                 <div class="row">
-                    <!-- Columna con el nombre de la asignatura -->
+                    <!-- Columna para el nombre de la asignatura, alineada a la izquierda -->
                     <div class="col-3 text-start">
                         <p>Computación en la nube</p>
                     </div>
-                    <!-- Columna con el nombres de los estudiante -->
+                    <!-- Columna para el nombre de los estudiantes, centrada -->
                     <div class="col-6 text-center">
                         <p>Adriaann Mauricio Rodriguez Rubiano - Jose Manuel Rojas Tovar</p>
                     </div>
-                    <!-- Columna vacia -->
+                    <!-- Columna vacía para redondear la estructura de 12 columnas -->
                     <div class="col-3"></div>
                 </div>
             </div>
         </footer>
     </div>
-    <!-- Bootstrap JS vía jsDelivr -->
+    
+    <!-- Importación de Bootstrap JS (incluye Popper) desde el CDN de jsDelivr -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
