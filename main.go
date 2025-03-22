@@ -82,7 +82,39 @@ func parseFlags() string {
 	return puerto
 }
 
-// indexHandler ahora obtiene cuatro imágenes al azar y pasa la información a la plantilla.
+// indexHandler obtiene ahora cuatro imágenes al azar y pasa la información a la plantilla.
+// indexHandler funciona como el manejador HTTP para la ruta principal.
+//
+// Realiza los siguientes pasos:
+//  1. Recupera el nombre del host de la máquina que ejecuta el servidor. Si ocurre un error,
+//     el nombre del host se establece por defecto a "desconocido".
+//  2. Obtiene una cantidad determinada (4) de rutas aleatorias de archivos de imagen del directorio "imagenes"
+//     utilizando la función randomImagePaths. Si la obtención falla,
+//     se utiliza una ruta de imagen predeterminada ("imagenes/imagen.png").
+//  3. Para cada ruta de imagen obtenida, realiza lo siguiente:
+//     - Determina el tipo MIME extrayendo la extensión del archivo (sin el punto).
+//     - Codifica los datos de la imagen en base64 utilizando la función imageData.
+//     - Extrae el nombre del archivo de la imagen.
+//  4. Construye una estructura de datos que contiene el nombre del host y un slice con la información de las imágenes.
+//  5. Ejecuta una plantilla (tpl) utilizando el objeto de datos construido, escribiendo el contenido renderizado
+//     en la respuesta HTTP.
+//
+// Si la ejecución de la plantilla falla, el manejador responde con un error HTTP 500.
+// indexHandler atiende las solicitudes HTTP para la página de inicio.
+//
+// Realiza las siguientes operaciones:
+//   - Recupera el nombre del host de la máquina, utilizando "desconocido" como valor por defecto en caso de error.
+//   - Obtiene las rutas de 4 imágenes aleatorias del directorio "imagenes" mediante la función randomImagePaths.
+//     Si se produce un error durante esta operación, se registra el error y se establece una ruta de imagen predeterminada.
+//   - Para cada ruta de imagen obtenida, realiza lo siguiente:
+//   - Se deduce el tipo MIME extrayendo la extensión del archivo (sin el punto).
+//   - Se codifican los datos de la imagen en una cadena base64 utilizando la función imageData.
+//   - Se recopilan el tipo MIME de la imagen, los datos codificados en base64 y el nombre del archivo
+//     en una estructura ImageInfo.
+//   - Se agregan las estructuras ImageInfo a un slice y se empaquetan junto con el nombre del host
+//     en una estructura de datos.
+//   - Se ejecuta la plantilla utilizando los datos ensamblados para renderizar la respuesta, respondiendo con un error HTTP 500
+//     si la ejecución de la plantilla falla.
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	// Se obtiene el nombre del equipo.
 	hostname, err := os.Hostname()
