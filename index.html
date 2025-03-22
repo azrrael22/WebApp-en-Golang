@@ -10,11 +10,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .card-img-top {
-            max-width: 500px; /* Ancho máximo de la imagen */
-            width: auto;
-            height: 300px;
+            width: 100%;
+            height: auto;
+            max-width: 500px;
+            max-height: 300px;
             margin: 0 auto; /* Para centrar la imagen en la columna */
-            border: 5px #212529;  /*Borde negro de 5px */
+            border: 5px solid #212529; /* Borde negro de 5px */
             object-fit: cover; /* Para que la imagen llene el contenedor */
         }
         .card {
@@ -45,7 +46,7 @@
                 <!-- Tarjeta con imagen y nombre -->
                 <div class="card">
                     <img src="data:image/{{.Mime}};base64,{{.ImageData}}" class="card-img-top" alt="Imagen sin centrar">
-                    <div class="card-body background-color text-white">
+                    <div class="card-body bg-dark text-white">
                         <p class="card-text text-center">{{.ImageName}}</p>
                     </div>
                 </div>
