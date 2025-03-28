@@ -13,8 +13,15 @@ import (
 	"strings"         // Para trabajar con cadenas.
 )
 
-// Se parsea y carga la plantilla HTML desde el archivo index.html.
+// Declaramos config como variable global
+var config Config
 var tpl = template.Must(template.ParseFiles("index.html"))
+
+// Primero, creamos una estructura para almacenar la configuración
+type Config struct {
+	Puerto    string
+	ImagenDir string
+}
 
 // imageData lee el contenido de la imagen ubicada en 'path', la codifica en base64 y retorna la cadena resultante.
 func imageData(path string) string {
@@ -73,13 +80,18 @@ func randomImagePaths(dir string, count int) ([]string, error) {
 	return paths, nil
 }
 
-// parseFlags se encarga de parsear los flags de línea de comandos y retorna el puerto sobre el que se ejecutará el servidor.
-// Por defecto, se utiliza "localhost:8000".
-func parseFlags() string {
-	var puerto string
-	flag.StringVar(&puerto, "p", "localhost:8000", "número de puerto")
+// Modificamos parseFlags para que devuelva la estructura Config
+func parseFlags() Config {
+	config := Config{}
+
+	// Definimos los flags
+	flag.StringVar(&config.Puerto, "p", "localhost:8000", "número de puerto (ejemplo: -p localhost:8000)")
+	flag.StringVar(&config.ImagenDir, "i", "./", "directorio de imágenes (ejemplo: -i ./imagenes)")
+
+	// Parseamos los flags
 	flag.Parse()
-	return puerto
+
+	return config
 }
 
 // indexHandler obtiene ahora cuatro imágenes al azar y pasa la información a la plantilla.
@@ -122,8 +134,8 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		hostname = "desconocido"
 	}
 
-	// Se obtienen 4 rutas de imagen aleatorias desde la carpeta "imagenes".
-	paths, err := randomImagePaths("imagenes", 4)
+	// Se obtienen 4 rutas de imagen aleatorias desde la carpeta configurada
+	paths, err := randomImagePaths(config.ImagenDir, 4)
 	if err != nil {
 		log.Printf("Error: %v", err)
 		// Opcional: definir ruta por defecto si ocurre un error.
@@ -171,15 +183,16 @@ func configureRoutes() *http.ServeMux {
 	return mux
 }
 
-// func main arranca el servidor web
+// Modificamos main para usar la nueva configuración
 func main() {
-	// Se obtiene el puerto a utilizar a partir de los flags.
-	puerto := parseFlags()
-	fmt.Println("Servidor corriendo en puerto", puerto)
+	// Inicializamos la configuración global
+	config = parseFlags()
+	fmt.Printf("Servidor corriendo en puerto %s\nUsando directorio de imágenes: %s\n",
+		config.Puerto, config.ImagenDir)
 
-	// Se configuran las rutas de los handlers.
+	// Se configuran las rutas de los handlers
 	mux := configureRoutes()
 
-	// Se inicia el servidor web. En caso de fallo, se loguea el error y se finaliza el programa.
-	log.Fatal(http.ListenAndServe(puerto, mux))
+	// Se inicia el servidor web
+	log.Fatal(http.ListenAndServe(config.Puerto, mux))
 }
