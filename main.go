@@ -84,12 +84,15 @@ func randomImagePaths(dir string, count int) ([]string, error) {
 func parseFlags() Config {
 	config := Config{}
 
-	// Definimos los flags
-	flag.StringVar(&config.Puerto, "p", "localhost:8000", "número de puerto (ejemplo: -p localhost:8000)")
+	// Definimos los flags - cambiamos el valor por defecto y el mensaje
+	flag.StringVar(&config.Puerto, "p", "8000", "número de puerto (ejemplo: -p 8000)")
 	flag.StringVar(&config.ImagenDir, "i", "./", "directorio de imágenes (ejemplo: -i ./imagenes)")
 
 	// Parseamos los flags
 	flag.Parse()
+
+	// Añadimos solo ":" al puerto
+	config.Puerto = ":" + config.Puerto
 
 	return config
 }
