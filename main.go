@@ -90,7 +90,7 @@ func parseFlags() Config {
 
 	// Definimos los flags - cambiamos el valor por defecto y el mensaje
 	flag.StringVar(&config.Puerto, "p", "8000", "número de puerto (ejemplo: -p 8000)")
-	flag.StringVar(&config.ImagenDir, "i", "./", "directorio de imágenes (ejemplo: -i ./imagenes)")
+	flag.StringVar(&config.ImagenDir, "i", "./imagenes", "directorio de imágenes (ejemplo: -i ./imagenes)")
 
 	// Parseamos los flags
 	flag.Parse()
