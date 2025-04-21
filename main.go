@@ -35,8 +35,12 @@ func imageData(path string) string {
 	return base64.StdEncoding.EncodeToString(data)
 }
 
-// randomImagePaths busca en el directorio dado todas las imágenes (formatos: .png, .jpg, .jpeg),
-// las mezcla de forma aleatoria y retorna un slice con 'count' rutas.
+
+// randomImagePaths escanea el directorio especificado buscando archivos de imagen con extensiones .png, .jpg o .jpeg,
+// los mezcla aleatoriamente y devuelve un slice que contiene las rutas completas de un subconjunto de las imágenes encontradas.
+// Si el número solicitado es mayor que la cantidad de imágenes disponibles, se ajusta para devolver todas las imágenes disponibles.
+// La función devuelve un error si no se puede leer el directorio o si no se encuentran archivos de imagen.
+
 func randomImagePaths(dir string, count int) ([]string, error) {
 	// Listar los archivos en el directorio.
 	files, err := os.ReadDir(dir)
