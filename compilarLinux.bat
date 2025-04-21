@@ -1,3 +1,4 @@
 set GOOS=linux
 set GOARCH=amd64
-go build -o srvimglinux main.go
+set CGO_ENABLED=0
+go build -a -tags netgo -o srvimgdocker main.go
